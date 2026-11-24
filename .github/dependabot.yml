@@ -1,0 +1,75 @@
+version: 2
+
+# CocoaPods (the examples' Podfiles) has no Dependabot ecosystem. The examples' Gradle files take
+# their versions from React Native and Expo, so only the library's android/ is listed for Gradle.
+updates:
+  - package-ecosystem: npm
+    directories:
+      - /
+      - /example/RNWifiReborn
+      - /example/with-expo
+    schedule:
+      interval: daily
+    cooldown:
+      default-days: 5
+    open-pull-requests-limit: 5
+    groups:
+      npm:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+    commit-message:
+      prefix: "chore(deps)"
+
+  - package-ecosystem: gradle
+    directory: /android
+    schedule:
+      interval: daily
+    cooldown:
+      default-days: 5
+    open-pull-requests-limit: 5
+    groups:
+      gradle:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+    commit-message:
+      prefix: "chore(deps)"
+
+  - package-ecosystem: bundler
+    directory: /example/RNWifiReborn
+    schedule:
+      interval: daily
+    cooldown:
+      default-days: 5
+    open-pull-requests-limit: 5
+    groups:
+      bundler:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+    commit-message:
+      prefix: "chore(deps)"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily
+    cooldown:
+      default-days: 5
+    open-pull-requests-limit: 5
+    groups:
+      actions:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+    commit-message:
+      prefix: "chore(deps)"
