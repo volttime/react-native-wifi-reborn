@@ -5,6 +5,9 @@ on:
     branches:
       - master
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -19,3 +22,36 @@ jobs:
     - run: npm run lint
     - run: npm run checkjs
     - run: npm run test
+
+  # Dependabot's minor and patch updates to the library merge once the build passed. Majors wait for
+  # a person, and so do 0.x minor updates (breaking under semver) and anything in example/, which this
+  # workflow does not build. master has no branch protection, so `gh pr merge --auto` would merge
+  # before the build ran; this job runs after it instead.
+  dependabot:
+    needs: build
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+    - name: Dependabot metadata
+      id: metadata
+      uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+
+    - name: Squash-merge minor and patch updates to the library
+      env:
+        GH_TOKEN: ${{ github.token }}
+        PR_URL: ${{ github.event.pull_request.html_url }}
+        DEPENDENCIES: ${{ steps.metadata.outputs.updated-dependencies-json }}
+      run: |
+        safe=$(jq 'length > 0 and all(.[];
+          (.directory | startswith("/example") | not)
+          and (.updateType == "version-update:semver-patch"
+            or (.updateType == "version-update:semver-minor" and ((.prevVersion // "0.") | startswith("0.") | not))))' <<< "$DEPENDENCIES")
+        if [ "$safe" != true ]; then
+          echo "A major, a 0.x minor or an example update: left for a person."
+          exit 0
+        fi
+        gh pr merge --squash "$PR_URL"
